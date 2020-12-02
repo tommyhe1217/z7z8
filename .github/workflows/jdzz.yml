@@ -35,7 +35,7 @@ jobs:
         if: env.JD_COOKIE
         run: |
           cd ~/z7z8
-          node jdzz.js
+          node Task/jdzz.js
         env:
           
           PUSH_KEY: ${{ secrets.PUSH_KEY }}
