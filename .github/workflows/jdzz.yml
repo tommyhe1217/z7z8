@@ -15,14 +15,13 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.repository.owner.id == github.event.sender.id
     env:
-        QQREAD_HEADER: ${{ secrets.QQREAD_HEADER }}
-        QQREAD_TIMEURL: ${{ secrets.QQREAD_TIMEURL }}
-        QQREAD_TIMEHD: ${{ secrets.QQREAD_TIMEHD }}
+        JD_COOKIE: ${{ secrets.JD_COOKIE }}
+       
         
     steps:
       - name: Checkout
         run: |
-          git clone https://github.com/ziye12/JavaScript.git ~/JavaScript
+          git clone https://github.com/tommyhe1217/z7z8.git ~/z7z8
       - name: Use Node.js 12.x
         uses: actions/setup-node@v1
         with:
@@ -35,8 +34,8 @@ jobs:
       - name: '运行 【京东赚赚】'
         if: env.QQREAD_HEADER
         run: |
-          cd ~/JavaScript
-          node Task/jdzz.js
+          cd ~/z7z8
+          node jdzz.js
         env:
           
           PUSH_KEY: ${{ secrets.PUSH_KEY }}
