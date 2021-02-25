@@ -1,20 +1,22 @@
 /**
- *
- Name: 京喜财富岛超值兑换
- Update: 2020/12/10 17:00
- Quantumult X:
- [task_local]
- 30 6,12,22 * * * https://raw.githubusercontent.com/MoPoQAQ/Script/main/Me/jx_cfd_exchange.js, tag=京喜财富岛兑换提醒, img-url=https://raw.githubusercontent.com/58xinian/icon/master/jxcfd.png, enabled=true
- Loon:
- [Script]
- cron "30 6,12,22 * * *" script-path=https://raw.githubusercontent.com/MoPoQAQ/Script/main/Me/jx_cfd.js,tag=京喜财富岛兑换提醒
- Surge:
- 京喜财富岛兑换提醒 = type=cron,cronexp="30 6,12,22 * * *",wake-system=1,timeout=20,script-path=https://raw.githubusercontent.com/MoPoQAQ/Script/main/Me/jx_cfd.js
- *
- **/
+*
+  Name: 京喜财富岛超值兑换
+  Update: 2021/1/6 22:30
+  
+  Quantumult X:
+  [task_local]
+    30 6,12,22 * * * https://raw.githubusercontent.com/moposmall/Script/main/Me/jx_cfd_exchange.js, tag=京喜财富岛兑换提醒, img-url=https://raw.githubusercontent.com/58xinian/icon/master/jxcfd.png, enabled=true
+  Loon:
+  [Script]
+    cron "30 6,12,22 * * *" script-path=https://raw.githubusercontent.com/moposmall/Script/main/Me/jx_cfd_exchange.js,tag=京喜财富岛兑换提醒
+  Surge:
+    京喜财富岛兑换提醒 = type=cron,cronexp="30 6,12,22 * * *",wake-system=1,timeout=20,script-path=https://raw.githubusercontent.com/moposmall/Script/main/Me/jx_cfd_exchange.js
+*
+**/
 
 const $ = new Env("京喜财富岛超值兑换");
 const JD_API_HOST = "https://m.jingxi.com/";
+const notify = $.isNode() ? require('./sendNotify') : '';
 const jdCookieNode = $.isNode() ? require("./jdCookie.js") : "";
 $.result = [];
 $.cookieArr = [];
@@ -25,8 +27,10 @@ $.currentCookie = '';
   for (let i = 0; i < $.cookieArr.length; i++) {
     $.currentCookie = $.cookieArr[i];
     if ($.currentCookie) {
-      const userName =  decodeURIComponent($.currentCookie.match(/pt_pin=(.+?);/) && $.currentCookie.match(/pt_pin=(.+?);/)[1]);
-      $.log(`开始【京东账号${i + 1}】${userName}`);
+      $.userName =  decodeURIComponent($.currentCookie.match(/pt_pin=(.+?);/) && $.currentCookie.match(/pt_pin=(.+?);/)[1]);
+      $.index = i + 1;
+      $.nickName = '';
+      $.log(`开始【京东账号${i + 1}】${$.userName}`);
       $.result.push(`==============🎁财富超值兑换🎁==============`);
       await getExchange();
     }
@@ -36,35 +40,32 @@ $.currentCookie = '';
   .catch((e) => $.logErr(e))
   .finally(() => $.done());
 
-
-//GET /jxcfd/task/QueryAllConfig?strZone=jxcfd&bizCode=jxcfd&source=jxcfd&dwEnv=7&_cfd_t=1607489676606&ptag=&_=1607489676625&sceneval=2&g_login_type=1&callback=jsonpCBKB&g_ty=ls
-
 function getExchange() {
   return new Promise(async (resolve) => {
-    $.get(taskUrl(`task/QueryAllConfig`), async (err, resp, data) => {
+    $.get(taskUrl(`task/QueryAllConfig`), async (err, resp, data) => { 
       try {
-        const {
-          iRet,
-          sData:{
-            exchangeCfg:[{
-              materialData = [{}],
-              hbData = [{}],
-              couponData = [{}]
-            }]
-          },
-          sErrMsg
+        const { 
+          iRet, 
+          sData:{ 
+            exchangeCfg:[{ 
+              materialData = [{}], 
+              hbData = [{}], 
+              couponData = [{}] 
+            }] 
+          }, 
+          sErrMsg 
         } = JSON.parse(data);
-        /**
-         $.log(
-         JSON.stringify(materialData,null,2),
-         JSON.stringify(hbData,null,2),
-         JSON.stringify(couponData,null,2)
-         );
-         **/
+/**        
+        $.log(
+          JSON.stringify(materialData,null,2),
+          JSON.stringify(hbData,null,2),
+          JSON.stringify(couponData,null,2)
+        );
+**/        
         await exchangeInfo('material', materialData);
         await exchangeInfo('hb', hbData);
         await exchangeInfo('coupon', couponData);
-
+        
       } catch (e) {
         $.logErr(e, resp);
       } finally {
@@ -75,28 +76,28 @@ function getExchange() {
 }
 
 async function exchangeInfo (ex_type, ex_data) {
-  for (let i = 0; i < ex_data.length; i++) {
-    const { levelstatus, name, goldNum, paper } = ex_data[i];
-    switch (ex_type) {
-      case 'material':
-        if(levelstatus === true) {
-          $.result.push(`🛍【${name}】:    💵财富值: ${paper}    ${ goldNum ? `💰元宝: ${goldNum}` : ''}`);
-        }
-        break;
-      case 'hb':
-        if(levelstatus === true) {
-          $.result.push(`🧧【${name}】:    💵财富值: ${paper}    ${ goldNum ? `💰元宝: ${goldNum}` : ''}`);
-        }
-        break;
-      case 'coupon':
-        if(levelstatus === true) {
-          $.result.push(`🛒【${name}】:    💵财富值: ${paper}    ${ goldNum ? `💰元宝: ${goldNum}` : ''}`);
-        }
-        break;
-      default:
-        break;
+    for (let i = 0; i < ex_data.length; i++) {
+      const { levelstatus, name, goldNum, paper } = ex_data[i];
+      switch (ex_type) {
+        case 'material':
+          if(levelstatus === true) {
+            $.result.push(`🛍【${name}】:    💵财富值: ${paper}    ${ goldNum ? `💰元宝: ${goldNum}` : ''}`);
+          }
+          break;
+        case 'hb':
+          if(levelstatus === true) {
+            $.result.push(`🧧【${name}】:    💵财富值: ${paper}    ${ goldNum ? `💰元宝: ${goldNum}` : ''}`);
+          }
+          break;
+        case 'coupon':
+          if(levelstatus === true) {
+            $.result.push(`🛒【${name}】:    💵财富值: ${paper}    ${ goldNum ? `💰元宝: ${goldNum}` : ''}`);
+          }
+          break;
+        default:
+          break;
+      }
     }
-  }
 }
 
 function taskUrl(function_path, body) {
@@ -136,7 +137,7 @@ function getCookies() {
 }
 
 function showMsg() {
-  return new Promise((resolve) => {
+  return new Promise(async (resolve) => {
     if ($.notifyTime) {
       const notifyTimes = $.notifyTime.split(",").map((x) => x.split(":"));
       const now = $.time("HH:mm").split(":");
@@ -149,6 +150,9 @@ function showMsg() {
       }
     } else {
       $.msg($.name, "", `\n${$.result.join("\n")}`);
+    }
+    if ($.isNode()) {
+      await notify.sendNotify(`${$.name} - 账号${$.index} - ${$.nickName}`, `账号${$.index}：${$.nickName || $.userName}\n${$.result.join("\n")}`);
     }
     resolve();
   });
